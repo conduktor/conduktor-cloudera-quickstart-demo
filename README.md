@@ -39,7 +39,6 @@ Set the following Environment Variables
 | `CLOUDERA_USER`           | cloudera csso user                                                                                                      |
 | `CLOUDERA_JKS`            |     jks file you would download and set up in the above instructions |
 | `CLOUDERA_BOOTSTRAP_SERVERS` | set up the cloudera bootstrap servers |
-| ---------------------------|-------------------------------------------------------------------------------------------------------------------------------------------- |
 
 Execute the following command: 
 ```
