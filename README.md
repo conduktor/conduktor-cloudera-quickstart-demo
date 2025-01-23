@@ -1,6 +1,6 @@
 # Cloudera + Conduktor
 
-![Conduktor Tech Overview](Conduktor Tech Overview.png)
+![Conduktor Tech Overview](Conduktor_Tech_Overview.png)
 
 ## Prework
 
