@@ -2,7 +2,7 @@
 
 ![Conduktor Tech Overview](Conduktor_Tech_Overview.png)
 
-[Link to this page](https://github.com/conduktor/conduktor-cloudera-quicklstart-demo)
+[Link to this page](https://github.com/conduktor/conduktor-cloudera-quickstart-demo)
 
 ## Prework
 
