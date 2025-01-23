@@ -2,6 +2,8 @@
 
 ![Conduktor Tech Overview](Conduktor_Tech_Overview.png)
 
+[Link to this page](https://github.com/conduktor/conduktor-cloudera-quicklstart-demo)
+
 ## Prework
 
 * Download the certificates from cloudera
