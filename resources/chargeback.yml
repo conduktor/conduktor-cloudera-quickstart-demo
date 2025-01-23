@@ -1,0 +1,12 @@
+---
+apiVersion: gateway/v2
+kind: Interceptor
+metadata:
+  name: observability-interceptor
+spec:
+  pluginClass: io.conduktor.gateway.interceptor.observability.ObservabilityPlugin
+  priority: 100
+  config:
+    topicName: observability
+    replicationFactor: 3
+    flushIntervalInSecond: 15

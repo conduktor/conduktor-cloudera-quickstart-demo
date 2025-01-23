@@ -1,0 +1,61 @@
+{
+ "type": "record",
+ "name": "Customer",
+ "namespace": "io.conduktor",
+ "fields": [
+  {
+   "name": "name",
+   "type": "string"
+  },
+  {
+   "name": "email",
+   "type": "string",
+   "format": "email"
+  },
+  {
+   "name": "age",
+   "type": "int",
+   "minimum": 18
+  },
+  {
+   "name": "address",
+   "type": {
+    "type": "record",
+    "name": "Address",
+    "fields": [
+     {
+      "name": "street",
+      "type": "string"
+     },
+     {
+      "name": "city",
+      "type": "string"
+     },
+     {
+      "name": "country",
+      "type": "string"
+     }
+    ]
+   }
+  }
+ ],
+ "metadata": {
+  "rules": [
+   {
+    "name": "check email",
+    "expression": "message.email.endsWith(\"conduktor.io\")",
+    "message": "email should end with \"conduktor.io\""
+   },
+   {
+    "name": "check country",
+    "expression": "message.address.country in [\"UK\", \"US\", \"DE\", \"FR\"]",
+    "message": "country should be valid"
+   },
+   {
+    "name": "check age limit",
+    "expression": "(message.address.country != \"US\" || message.age >= 21) && (message.address.country != \"DE\" || message.age >= 24)",
+    "message": "check age limit per country"
+   }
+  ]
+ }
+}

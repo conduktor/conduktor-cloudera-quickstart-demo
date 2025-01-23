@@ -1,0 +1,78 @@
+organization:
+  name: default
+database:
+  url: postgresql://postgres:pwd@postgres/postgres
+clusters:
+  # Cloudera Kafka Cluster
+  - id: conduktor-gateway-passthrough
+    name: Conduktor-gateway-passthrough
+    color: '#0013E7'
+    bootstrapServers: 'broker-passthroughmain1546337502.conduktor-gateway-passthrough.sni-demo.local:6969, broker-passthroughmain1546337526.conduktor-gateway-passthrough.sni-demo.local:6969, broker-passthroughmain1546337550.conduktor-gateway-passthrough.sni-demo.local:6969'
+    kafkaFlavor:
+      type: "Gateway"
+      url: "http://conduktor-gateway-passthrough:8888" 
+      user: "admin" 
+      password: "conduktor" 
+      virtualCluster: "passthrough" 
+    properties: |
+      sasl.mechanism=PLAIN
+      security.protocol=SASL_SSL
+      sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required   username="$CLOUDERA_USER"   password="$CLOUDERA_PASSWORD";
+      ssl.truststore.location=/security/kafka.conduktor-gateway-passthrough.sni-demo.local.truststore.jks
+      ssl.truststore.password=conduktor
+      ssl.truststore.type=JKS
+  - id: cloudera-kafka
+    name: Cloudera-kafka
+    color: '#0013E7'
+    bootstrapServers: 'zeke-kafka-corebroker2.zeke-tes.ferv-1d67.a0.cloudera.site:9093, zeke-kafka-corebroker1.zeke-tes.ferv-1d67.a0.cloudera.site:9093, zeke-kafka-corebroker0.zeke-tes.ferv-1d67.a0.cloudera.site:9093'
+    properties: |
+      sasl.mechanism=PLAIN
+      security.protocol=SASL_SSL
+      sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required   username="$CLOUDERA_USER"   password="$CLOUDERA_PASSWORD";
+      ssl.truststore.location=/opt/conduktor/certs/zeke-test2-cdp-env.jks
+      ssl.truststore.password=12345z
+      ssl.truststore.type=JKS
+    schemaRegistry:
+      id: cloudera-schema-registry
+      url: 'https://zeke-kafka-master0.zeke-tes.ferv-1d67.a0.cloudera.site/zeke-kafka/cdp-proxy-api/schema-registry/api/v1/confluent/'
+      properties: |
+        schema.registry.url=https://zeke-kafka-master0.zeke-tes.ferv-1d67.a0.cloudera.site/zeke-kafka/cdp-proxy-api/schema-registry/api/v1/confluent/
+        basic.auth.user.info=$CLOUDERA_USER:$CLOUDERA_PASSWORD
+        basic.auth.credentials.source=USER_INFO
+    # schemaRegistry:
+    #   id: cloudera-schema-registry
+    #   url: 'https://zeke-kafka-master0.zeke-tes.ferv-1d67.a0.cloudera.site/zeke-kafka/cdp-proxy-api/schema-registry/api/v1/'
+    #   properties: |
+    #     sasl.mechanism=PLAIN
+    #     security.protocol=SASL_SSL
+    #     sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required   username="csso_zeke"   password="wzc*GQU2geq.yae8wgk";
+    #     ssl.truststore.location=/opt/conduktor/certs/zeke-test2-cdp-env.jks
+    #     ssl.truststore.password=12345z
+    #     ssl.truststore.type=JKS
+    #     schema.registry.url=https://zeke-kafka-master0.zeke-tes.ferv-1d67.a0.cloudera.site/zeke-kafka/cdp-proxy-api/schema-registry/api/v1/
+    #     schema.registry.auth.username=csso_zeke
+    #     schema.registry.auth.password=wzc*GQU2geq.yae8wgk
+    #     basic.auth.user.info=csso_zeke:wzc*GQU2geq.yae8wgk
+    kafkaConnects:
+    - id: cloudera-kafka-connect
+      name: cloudera-kafka-connect
+      url: 'https://zeke-kafka-master0.zeke-tes.ferv-1d67.a0.cloudera.site/zeke-kafka/cdp-proxy-api/kafka-connect/'
+      security:
+        username: $CLOUDERA_USER
+        password: $CLOUDERA_PASSWORD
+
+admin:
+  email: admin@demo.dev
+  password: adminP4ss!
+
+sso:
+  ldap:
+    - name: 'default' # Custom name for ldap connection
+      server: 'ldap://openldap:389' # LDAP server URI with port
+      managerDn: 'cn=admin,dc=conduktordemo,dc=io' # Bind DN
+      managerPassword: 'admin' # Bind Password
+      search-base: 'ou=users,dc=conduktordemo,dc=io' # Base DN to search for users
+      search-filter: '(cn={0})' # Search filter
+      groups-enabled: true # Enable group search
+      groups-base: 'ou=groups,dc=conduktordemo,dc=io' # Base DN to search for groups
+      groups-filter: 'member={0}' # Group search filter

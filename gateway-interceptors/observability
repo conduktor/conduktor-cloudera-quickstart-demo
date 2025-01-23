@@ -1,0 +1,10 @@
+{
+  "pluginClass": "io.conduktor.gateway.interceptor.observability.ObservabilityPlugin",
+  "priority": 100,
+  "config": {
+    "topicName": "observability",
+    "replicationFactor": 3,
+    "flushIntervalInSecond": 15
+  },
+  "name": "observability-interceptor"
+}
