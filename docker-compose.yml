@@ -24,7 +24,7 @@ services:
     command: "--copy-service --loglevel debug"
 
   conduktor-console:
-    image: conduktor/conduktor-console:1.30.0
+    image: conduktor/conduktor-console:1.32.1
     hostname: conduktor-console
     container_name: conduktor-console
     ports:
@@ -43,6 +43,7 @@ services:
       CDK_IN_CONF_FILE: /opt/conduktor/console-config.yaml
       CDK_DEBUG: ${CDK_DEBUG:-false}
       CDK_LICENSE: ${CDK_LICENSE:-}
+      CLOUDERA_USER: ${CLOUDERA_USER}
       CLOUDERA_PASSWORD: ${CLOUDERA_PASSWORD}
       CDK_MONITORING_CORTEX-URL: http://conduktor-monitoring:9009/
       CDK_MONITORING_ALERT-MANAGER-URL: http://conduktor-monitoring:9010/
@@ -60,13 +61,13 @@ services:
 
 
   conduktor-monitoring:
-    image: conduktor/conduktor-console-cortex:1.30.0
+    image: conduktor/conduktor-console-cortex:1.32.1
     container_name: monitoring
     environment:
       CDK_CONSOLE-URL: "http://conduktor-console:8080"
 
   conduktor-gateway-passthrough:
-    image: conduktor/conduktor-gateway:3.5.0
+    image: conduktor/conduktor-gateway:3.6.1
     hostname: conduktor-gateway-passthrough
     container_name: conduktor-gateway-passthrough
     environment:
@@ -85,6 +86,7 @@ services:
       GATEWAY_ADVERTISED_HOST: conduktor-gateway-passthrough.sni-demo.local
       # Rule 2: You MUST configure the gateway in SASL_SSL otherwise we won't be  able to leverage SNI routing
       GATEWAY_SECURITY_PROTOCOL: DELEGATED_SASL_SSL
+      # GATEWAY_SECURITY_PROTOCOL: PLAINTEXT
       # Rule 3: You MUST configure the routing to do host mapping
       GATEWAY_ROUTING_MECHANISM: host
       # Optional: You can configure the naming, by default it's <host-prefix><cluster-id><brokder-id>.<advertised-host>
@@ -94,6 +96,7 @@ services:
       GATEWAY_SSL_KEY_STORE_PASSWORD: conduktor
       GATEWAY_SSL_KEY_PASSWORD: conduktor
       GATEWAY_FEATURE_FLAGS_ANALYTICS: false
+      GATEWAY_USER_POOL_SERVICE_ACCOUNT_REQUIRED: true
       # Might help to debug SNI
       # LOG4J2_IO_CONDUKTOR_PROXY_NETWORK_LEVEL: DEBUG
     networks:
@@ -131,7 +134,7 @@ services:
         target: /security
 
   conduktor-ctl:
-    image: conduktor/conduktor-ctl:v0.3.4
+    image: conduktor/conduktor-ctl:v0.5.0
     container_name: conduktor-ctl
     entrypoint: sleep infinity # override entry point to keep container up
     volumes:
