@@ -68,17 +68,11 @@ Please configure the data generator to run through the gateway
 
 ## Enternal Data Sharing
 
-*you will need to edit the CSSO user for your own cloudera environment to correctly run this demo. please edit the file `resources/external_virtual_cluster`*
+*this demo requires setting up a non-delegated gateway*
 
-you will need to deploy a partner zone
-
-1. login to the conduktor cli instance
-
-`docker compose exec -it conduktor-ctl /bin/sh`
-
-2. apply the resources
-
-`conduktor apply -f resources/external_virtual_cluster`
+```
+./service_account
+```
 
 ## Encryption Demo
 
