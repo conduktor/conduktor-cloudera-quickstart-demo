@@ -70,6 +70,9 @@ services:
     image: conduktor/conduktor-gateway:3.6.1
     hostname: conduktor-gateway-passthrough
     container_name: conduktor-gateway-passthrough
+    ports:
+      - 8888:8888
+      - 6969:6969
     environment:
       GATEWAY_LICENSE_KEY: ${CDK_LICENSE:-}
       KAFKA_BOOTSTRAP_SERVERS: ${CLOUDERA_BOOTSTRAP_SERVERS}
@@ -85,8 +88,8 @@ services:
       # Rule 1:  You MUST configure advertised host, this will be use a base domain for nested brokers
       GATEWAY_ADVERTISED_HOST: conduktor-gateway-passthrough.sni-demo.local
       # Rule 2: You MUST configure the gateway in SASL_SSL otherwise we won't be  able to leverage SNI routing
-      GATEWAY_SECURITY_PROTOCOL: DELEGATED_SASL_SSL
-      # GATEWAY_SECURITY_PROTOCOL: PLAINTEXT
+      # GATEWAY_SECURITY_PROTOCOL: DELEGATED_SASL_SSL
+      GATEWAY_SECURITY_PROTOCOL: SASL_SSL
       # Rule 3: You MUST configure the routing to do host mapping
       GATEWAY_ROUTING_MECHANISM: host
       # Optional: You can configure the naming, by default it's <host-prefix><cluster-id><brokder-id>.<advertised-host>
