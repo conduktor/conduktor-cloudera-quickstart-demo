@@ -1,0 +1,34 @@
+---
+# Application of web analytics
+apiVersion: self-service/v1
+kind: "Application"
+metadata:
+  name: "website-analytics"
+spec:
+  title: "Website Analytics"
+  description: "Application for streaming web analytics"
+  owner: "website-analytics-team" # the Conduktor group
+---
+# ApplicationInstance for website analytics dev environment
+apiVersion: self-service/v1
+kind: "ApplicationInstance"
+metadata:
+  name: "website-analytics-dev"
+  application: "website-analytics"
+spec:
+  cluster: "cloudera-kafka"
+  serviceAccount: "sa-website-analytics"
+  topicPolicyRef:
+    - "generic-dev-topic-policy"
+    - "naming-convention-topic-policy"
+    - "website-analytics-naming-topic-policy"
+  resources:
+    - type: "TOPIC"
+      name: "website-analytics."
+      patternType: "PREFIXED"
+    - type: SUBJECT
+      name: "website-analytics."
+      patternType: PREFIXED
+    - type: CONSUMER_GROUP # GROUP pre 1.24
+      name: "website-analytics."
+      patternType: PREFIXED

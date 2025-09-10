@@ -1,0 +1,21 @@
+---
+apiVersion: gateway/v2
+kind: Interceptor
+metadata:
+  name: guard-on-create-topic
+  scope:
+    vCluster: virtual-cluster
+spec:
+  pluginClass: "io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin"
+  priority: 100
+  config:
+    topic: ".*"
+    numPartition:
+      min: 1
+      max: 6
+      action: BLOCK
+    replicationFactor:
+      min: 3
+      max: 3
+      action: OVERRIDE
+      overrideValue: 3

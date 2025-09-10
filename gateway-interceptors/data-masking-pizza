@@ -1,0 +1,20 @@
+{
+   "name": "data-masking",
+   "pluginClass": "io.conduktor.gateway.interceptor.FieldLevelDataMaskingPlugin",
+   "priority": 100,
+   "config": {
+      "policies": [
+         {
+            "name": "Mask sensitive",
+            "rule": {
+               "type": "MASK_ALL",
+               "maskingString": "********"
+            },
+            "fields": [
+               "customerName",
+               "phoneNumber"
+            ]
+         }
+      ]
+   }
+}

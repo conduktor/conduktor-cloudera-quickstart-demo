@@ -1,0 +1,25 @@
+---
+apiVersion: gateway/v2
+kind: VirtualCluster
+metadata:
+ name: "partner-zone"
+spec:
+ {}
+---
+apiVersion: gateway/v2
+kind: GatewayServiceAccount
+metadata:
+  name: csso_zeke
+  vCluster: "partner-zone"
+spec:
+  type: EXTERNAL
+  externalNames: 
+  - csso_zeke
+---
+apiVersion: gateway/v2
+kind: AliasTopic
+metadata:
+  name: zeke-pizza-orders
+  vCluster: "partner-zone"
+spec:
+  physicalName: pizza-orders

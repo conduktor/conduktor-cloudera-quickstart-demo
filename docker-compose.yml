@@ -1,0 +1,173 @@
+services:
+  postgres:
+    image: postgres:15.1
+    restart: always
+    container_name: postgres
+    hostname: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: pwd
+
+  openldap:
+    image: osixia/openldap:1.3.0
+    hostname: openldap
+    container_name: openldap
+    ports:
+      - 1389:389
+    environment:
+      LDAP_ORGANISATION: "conduktorDemo"
+      LDAP_DOMAIN: "conduktordemo.io"
+      LDAP_BASE_DN: "dc=conduktordemo,dc=io"
+    volumes:
+      - ${CDK_STACK:-.}/../resources/ldap-users:/container/service/slapd/assets/config/bootstrap/ldif/custom
+    command: "--copy-service --loglevel debug"
+
+  conduktor-console:
+    image: conduktor/conduktor-console:1.32.1
+    hostname: conduktor-console
+    container_name: conduktor-console
+    ports:
+      - 8080:8080
+    volumes:
+      - ${CDK_STACK:-.}/config.yml:/opt/conduktor/console-config.yaml
+      - type: bind
+        source: "${CDK_STACK:-.}/security"
+        target: /security
+      - type: bind
+        source: "${CLOUDERA_JKS}"
+        target: /opt/conduktor/certs/zeke-test2-cdp-env.jks 
+    networks:
+      default:
+    environment:
+      CDK_IN_CONF_FILE: /opt/conduktor/console-config.yaml
+      CDK_DEBUG: ${CDK_DEBUG:-false}
+      CDK_LICENSE: ${CDK_LICENSE:-}
+      CLOUDERA_USER: ${CLOUDERA_USER}
+      CLOUDERA_PASSWORD: ${CLOUDERA_PASSWORD}
+      CDK_MONITORING_CORTEX-URL: http://conduktor-monitoring:9009/
+      CDK_MONITORING_ALERT-MANAGER-URL: http://conduktor-monitoring:9010/
+      CDK_MONITORING_CALLBACK-URL: http://conduktor-console:8080/monitoring/api/
+      CDK_MONITORING_NOTIFICATIONS-CALLBACK-URL: http://localhost:8080
+      CDK_AUTH_LOCAL-USERS_0_EMAIL: "alice@conduktor.io"
+      CDK_AUTH_LOCAL-USERS_0_PASSWORD: "aliceP4ss!"
+      CDK_AUTH_LOCAL-USERS_1_EMAIL: "bob@conduktor.io"
+      CDK_AUTH_LOCAL-USERS_1_PASSWORD: "bobP4ss!"
+    depends_on:
+      postgres:
+        condition: service_started
+      openldap:
+        condition: service_started
+
+
+  conduktor-monitoring:
+    image: conduktor/conduktor-console-cortex:1.32.1
+    container_name: monitoring
+    environment:
+      CDK_CONSOLE-URL: "http://conduktor-console:8080"
+
+  conduktor-gateway-passthrough:
+    image: conduktor/conduktor-gateway:3.6.1
+    hostname: conduktor-gateway-passthrough
+    container_name: conduktor-gateway-passthrough
+    environment:
+      GATEWAY_LICENSE_KEY: ${CDK_LICENSE:-}
+      KAFKA_BOOTSTRAP_SERVERS: ${CLOUDERA_BOOTSTRAP_SERVERS}
+      KAFKA_SECURITY_PROTOCOL: SASL_SSL
+      KAFKA_SASL_MECHANISM: PLAIN
+      KAFKA_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username='${CLOUDERA_USER}' password='${CLOUDERA_PASSWORD}';
+      KAFKA_SSL_TRUSTSTORE_LOCATION: /opt/conduktor/certs/zeke-test2-cdp-env.jks
+      KAFKA_SSL_TRUSTSTORE_PASSWORD: 12345z
+      KAFKA_SSL_TRUSTSTORE_TYPE: JKS
+      # Cluster ID must be different for each type of gateway otherwise they will loadbalance with each other
+      GATEWAY_CLUSTER_ID: conduktor-gateway-passthrough
+      # Config for SNI routing
+      # Rule 1:  You MUST configure advertised host, this will be use a base domain for nested brokers
+      GATEWAY_ADVERTISED_HOST: conduktor-gateway-passthrough.sni-demo.local
+      # Rule 2: You MUST configure the gateway in SASL_SSL otherwise we won't be  able to leverage SNI routing
+      GATEWAY_SECURITY_PROTOCOL: DELEGATED_SASL_SSL
+      # GATEWAY_SECURITY_PROTOCOL: PLAINTEXT
+      # Rule 3: You MUST configure the routing to do host mapping
+      GATEWAY_ROUTING_MECHANISM: host
+      # Optional: You can configure the naming, by default it's <host-prefix><cluster-id><brokder-id>.<advertised-host>
+      GATEWAY_ADVERTISED_HOST_PREFIX: broker-passthrough
+      GATEWAY_SNI_HOST_SEPARATOR: .
+      GATEWAY_SSL_KEY_STORE_PATH: /security/kafka.conduktor-gateway-passthrough.sni-demo.local.keystore.jks
+      GATEWAY_SSL_KEY_STORE_PASSWORD: conduktor
+      GATEWAY_SSL_KEY_PASSWORD: conduktor
+      GATEWAY_FEATURE_FLAGS_ANALYTICS: false
+      GATEWAY_USER_POOL_SERVICE_ACCOUNT_REQUIRED: true
+      # Might help to debug SNI
+      # LOG4J2_IO_CONDUKTOR_PROXY_NETWORK_LEVEL: DEBUG
+    networks:
+      default:
+        aliases:
+          - broker-passthroughmain1546337502.conduktor-gateway-passthrough.sni-demo.local
+          - broker-passthroughmain1546337526.conduktor-gateway-passthrough.sni-demo.local
+          - broker-passthroughmain1546337550.conduktor-gateway-passthrough.sni-demo.local
+    volumes:
+      - type: bind
+        source: "${CDK_STACK:-.}/security"
+        target: /security
+      - type: bind
+        source: "${CLOUDERA_JKS}"
+        target: /opt/conduktor/certs/zeke-test2-cdp-env.jks 
+    healthcheck:
+      test: curl localhost:8888/health || exit 1
+      start_period: 10s
+      interval: 5s
+      retries: 25
+
+
+  kafka-client:
+    image: confluentinc/cp-kafka:7.8.0
+    hostname: kafka-client
+    container_name: kafka-client
+    command: sleep infinity
+    environment:
+      GATEWAY_SSL_KEY_STORE_PATH: /security/kafka.conduktor-gateway-passthrough.sni-demo.local.keystore.jks
+      GATEWAY_SSL_KEY_STORE_PASSWORD: conduktor
+      GATEWAY_SSL_KEY_PASSWORD: conduktor
+    volumes:
+      - type: bind
+        source: "${CDK_STACK:-.}/security"
+        target: /security
+
+  conduktor-ctl:
+    image: conduktor/conduktor-ctl:v0.5.0
+    container_name: conduktor-ctl
+    entrypoint: sleep infinity # override entry point to keep container up
+    volumes:
+      - ./resources:/resources
+      - ./self-service:/self-service
+    environment:
+      CDK_BASE_URL: "http://conduktor-console:8080"
+      CDK_API_KEY: "" # generate me from the UI for the demo, CLI also available
+  
+  vault:
+    image: hashicorp/vault
+    hostname: vault
+    container_name: vault
+    ports:
+      - "8200:8200"
+    command: [
+        "sh",
+        "-c",
+        "(while ! nc -z 127.0.0.1 8200; \
+        do \
+        sleep 1; \
+        echo 'waiting for vault service ...'; \
+        done; \
+        export VAULT_ADDR='http://0.0.0.0:8200';\
+        vault secrets enable transit; \
+        vault secrets enable -version=1 kv; \
+        vault secrets enable totp \
+        ) & vault server -dev -dev-listen-address=0.0.0.0:8200",
+      ]
+    environment:
+      VAULT_ADDR: "http://0.0.0.0:8200"
+      VAULT_DEV_ROOT_TOKEN_ID: "vault-plaintext-root-token"
+
+networks:
+  default:
+    name: sni-demo.local
